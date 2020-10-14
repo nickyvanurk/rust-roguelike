@@ -1,0 +1,8 @@
+[package]
+name = "rust"
+version = "0.1.0"
+authors = ["Nicky van Urk <info@nickyvanurk.com>"]
+edition = "2018"
+
+[dependencies]
+rltk = { version = "0.8.1" }
