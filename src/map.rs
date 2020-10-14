@@ -1,5 +1,6 @@
 use super::Rect;
 use rltk::{RandomNumberGenerator, Rltk, RGB};
+use std::cmp::{max, min};
 
 #[derive(PartialEq, Copy, Clone)]
 pub enum TileType {
@@ -46,16 +47,38 @@ pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
     let room1 = Rect::new(20, 15, 10, 15);
     let room2 = Rect::new(35, 15, 10, 15);
 
-    apply_room_to_map(&room1, &mut map);
-    apply_room_to_map(&room2, &mut map);
+    add_room(&mut map, &room1);
+    add_room(&mut map, &room2);
+
+    add_horizontal_corridor(&mut map, 25, 40, 23);
 
     map
 }
 
-fn apply_room_to_map(room: &Rect, map: &mut [TileType]) {
+fn add_room(map: &mut [TileType], room: &Rect) {
     for y in room.y1 + 1..=room.y2 {
         for x in room.x1 + 1..=room.x2 {
             map[xy_idx(x, y)] = TileType::Floor;
+        }
+    }
+}
+
+fn add_horizontal_corridor(map: &mut [TileType], x1: i32, x2: i32, y: i32) {
+    for x in min(x1, x2)..=max(x1, x2) {
+        let idx = xy_idx(x, y);
+
+        if idx > 0 && idx < 80 * 50 {
+            map[idx as usize] = TileType::Floor;
+        }
+    }
+}
+
+fn add_vertical_corridor(map: &mut [TileType], y1: i32, y2: i32, x: i32) {
+    for y in min(y1, y2)..=max(y1, y2) {
+        let idx = xy_idx(x, y);
+
+        if idx > 0 && idx < 80 * 50 {
+            map[idx as usize] = TileType::Floor;
         }
     }
 }
