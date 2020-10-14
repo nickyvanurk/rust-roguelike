@@ -69,6 +69,20 @@ pub fn new_map_rooms_and_corridors() -> Vec<TileType> {
 
         if valid_room {
             add_room(&mut map, &new_room);
+
+            if !rooms.is_empty() {
+                let (prev_x, prev_y) = rooms[rooms.len() - 1].center();
+                let (new_x, new_y) = new_room.center();
+
+                if rng.range(0, 2) == 1 {
+                    add_horizontal_corridor(&mut map, prev_x, new_x, prev_y);
+                    add_vertical_corridor(&mut map, prev_y, new_y, new_x);
+                } else {
+                    add_vertical_corridor(&mut map, prev_y, new_y, prev_x);
+                    add_horizontal_corridor(&mut map, prev_x, new_x, new_y);
+                }
+            }
+
             rooms.push(new_room);
         }
     }
