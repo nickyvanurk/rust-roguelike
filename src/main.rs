@@ -17,8 +17,15 @@ mod visibility_system;
 use monster_ai_system::MonsterAiSystem;
 use visibility_system::VisibilitySystem;
 
+#[derive(PartialEq, Copy, Clone)]
+pub enum RunState {
+    Paused,
+    Running,
+}
+
 pub struct State {
     ecs: World,
+    runstate: RunState,
 }
 
 impl State {
@@ -37,8 +44,12 @@ impl GameState for State {
     fn tick(&mut self, ctx: &mut Rltk) {
         ctx.cls();
 
-        player_input(self, ctx);
-        self.run_systems();
+        if self.runstate == RunState::Running {
+            self.run_systems();
+            self.runstate = RunState::Paused;
+        } else {
+            self.runstate = player_input(self, ctx);
+        }
 
         draw_map(&self.ecs, ctx);
 
@@ -61,7 +72,11 @@ fn main() -> rltk::BError {
         .with_title("Roguelike")
         .build()?;
 
-    let mut gs = State { ecs: World::new() };
+    let mut gs = State {
+        ecs: World::new(),
+        runstate: RunState::Running,
+    };
+
     gs.ecs.register::<Position>();
     gs.ecs.register::<Renderable>();
     gs.ecs.register::<Player>();
