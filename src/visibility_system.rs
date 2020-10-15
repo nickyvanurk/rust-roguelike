@@ -15,11 +15,17 @@ impl<'a> System<'a> for VisibilitySystem {
 
     fn run(&mut self, (mut map, entities, mut viewshed, pos, player): Self::SystemData) {
         for (entity, viewshed, pos) in (&entities, &mut viewshed, &pos).join() {
+            if !viewshed.dirty {
+                continue;
+            }
+
+            viewshed.dirty = false;
             viewshed.visible_tiles.clear();
-            viewshed.visible_tiles = field_of_view(Point::new(pos.x, pos.y), viewshed.range, &*map);
+            viewshed.visible_tiles =
+                field_of_view(Point::new(pos.x, pos.y), viewshed.range, &*map);
             viewshed
                 .visible_tiles
-                .retain(|p| p.x > 0 && p.x < map.width - 1 && p.y > 0 && p.y < map.height - 1);
+                .retain(|p| p.x >= 0 && p.x <= map.width - 1 && p.y >= 0 && p.y <= map.height - 1);
 
             let p: Option<&Player> = player.get(entity);
 
