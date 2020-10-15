@@ -1,5 +1,5 @@
-use super::{Monster, Position, Viewshed};
-use rltk::{console, field_of_view, Point};
+use super::{Monster, Name, Viewshed};
+use rltk::{console, Point};
 use specs::prelude::*;
 
 pub struct MonsterAiSystem {}
@@ -9,12 +9,13 @@ impl<'a> System<'a> for MonsterAiSystem {
         ReadExpect<'a, Point>,
         WriteStorage<'a, Viewshed>,
         ReadStorage<'a, Monster>,
+        ReadStorage<'a, Name>,
     );
 
-    fn run(&mut self, (player_pos, viewshed, monster): Self::SystemData) {
-        for (viewshed, monster) in (&viewshed, &monster).join() {
+    fn run(&mut self, (player_pos, viewshed, monster, name): Self::SystemData) {
+        for (viewshed, _, name) in (&viewshed, &monster, &name).join() {
             if viewshed.visible_tiles.contains(&*player_pos) {
-                console::log("Monster considers their own existence");
+                console::log(&format!("{} shouts insults", name.name));
             }
         }
     }
