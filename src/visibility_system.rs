@@ -29,9 +29,14 @@ impl<'a> System<'a> for VisibilitySystem {
             let p: Option<&Player> = player.get(entity);
 
             if let Some(_) = p {
+                for tile in map.visible_tiles.iter_mut() {
+                    *tile = false
+                }
+
                 for tile in viewshed.visible_tiles.iter() {
                     let idx = map.xy_idx(tile.x, tile.y);
                     map.revealed_tiles[idx] = true;
+                    map.visible_tiles[idx] = true;
                 }
             }
         }
