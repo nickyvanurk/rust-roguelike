@@ -18,6 +18,13 @@ pub fn player_input(gs: &mut State, ctx: &Rltk) -> RunState {
             VirtualKeyCode::Down | VirtualKeyCode::Numpad2 | VirtualKeyCode::J => {
                 try_move_player(0, 1, &mut gs.ecs)
             }
+
+            // Diagonals
+            VirtualKeyCode::Numpad9 | VirtualKeyCode::U => try_move_player(1, -1, &mut gs.ecs),
+            VirtualKeyCode::Numpad7 | VirtualKeyCode::Y => try_move_player(-1, -1, &mut gs.ecs),
+            VirtualKeyCode::Numpad3 | VirtualKeyCode::M => try_move_player(1, 1, &mut gs.ecs),
+            VirtualKeyCode::Numpad1 | VirtualKeyCode::N => try_move_player(-1, 1, &mut gs.ecs),
+
             _ => return RunState::Paused,
         },
         None => return RunState::Paused,
