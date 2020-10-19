@@ -10,23 +10,25 @@ pub enum TileType {
 }
 
 pub struct Map {
+    pub tiles: Vec<TileType>,
+    pub rooms: Vec<Rect>,
     pub width: i32,
     pub height: i32,
-    pub tiles: Vec<TileType>,
     pub revealed_tiles: Vec<bool>,
     pub visible_tiles: Vec<bool>,
-    pub rooms: Vec<Rect>,
+    pub blocked: Vec<bool>,
 }
 
 impl Map {
     pub fn new_map_rooms_and_corridors() -> Map {
         let mut map = Map {
+            tiles: vec![TileType::Wall; 80 * 50],
+            rooms: Vec::new(),
             width: 80,
             height: 50,
-            tiles: vec![TileType::Wall; 80 * 50],
             revealed_tiles: vec![false; 80 * 50],
             visible_tiles: vec![false; 80 * 50],
-            rooms: Vec::new(),
+            blocked: vec![false; 80 * 50],
         };
 
         const MAX_ROOMS: i32 = 30;
@@ -78,6 +80,12 @@ impl Map {
         (y as usize * self.width as usize) + x as usize
     }
 
+    pub fn populate_blocked(&mut self) {
+        for (i, tile) in self.tiles.iter_mut().enumerate() {
+            self.blocked[i] = *tile == TileType::Wall;
+        }
+    }
+
     fn add_room(&mut self, room: &Rect) {
         for y in room.y1 + 1..=room.y2 {
             for x in room.x1 + 1..=room.x2 {
@@ -108,12 +116,12 @@ impl Map {
     }
 
     fn is_exit_valid(&self, x: i32, y: i32) -> bool {
-        if x < 1 || x > self.width - 1 || y < 1 || y > self.height - 1 {
+        if x < 0 || x > self.width - 1 || y < 0 || y > self.height - 1 {
             return false;
         }
 
         let idx = self.xy_idx(x, y);
-        self.tiles[idx] != TileType::Wall
+        !self.blocked[idx]
     }
 }
 
