@@ -1,5 +1,5 @@
-use super::{Map, Player, Point, Position, RunState, State, Viewshed};
-use rltk::{Rltk, VirtualKeyCode};
+use super::{CombatStats, Map, Player, Point, Position, RunState, State, Viewshed};
+use rltk::{console, Rltk, VirtualKeyCode};
 use specs::prelude::*;
 use std::cmp::{max, min};
 
@@ -37,11 +37,21 @@ pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {
     let players = ecs.read_storage::<Player>();
     let mut positions = ecs.write_storage::<Position>();
     let mut viewsheds = ecs.write_storage::<Viewshed>();
+    let combat_stats = ecs.read_storage::<CombatStats>();
     let map = ecs.fetch::<Map>();
     let mut ppos = ecs.write_resource::<Point>();
 
     for (_, pos, viewshed) in (&players, &mut positions, &mut viewsheds).join() {
         let destination_idx = map.xy_idx(pos.x + delta_x, pos.y + delta_y);
+
+        for potential_target in map.tile_content[destination_idx].iter() {
+            let target = combat_stats.get(*potential_target);
+
+            if let Some(_) = target {
+                console::log(&format!("From Hell's Heart, I stab thee!"));
+                return;
+            }
+        }
 
         if !map.blocked[destination_idx] {
             pos.x = min(79, max(0, pos.x + delta_x));
