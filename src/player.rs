@@ -25,12 +25,12 @@ pub fn player_input(gs: &mut State, ctx: &Rltk) -> RunState {
             VirtualKeyCode::Numpad3 | VirtualKeyCode::M => try_move_player(1, 1, &mut gs.ecs),
             VirtualKeyCode::Numpad1 | VirtualKeyCode::N => try_move_player(-1, 1, &mut gs.ecs),
 
-            _ => return RunState::Paused,
+            _ => return RunState::AwaitingInput,
         },
-        None => return RunState::Paused,
+        None => return RunState::AwaitingInput,
     }
 
-    RunState::Running
+    RunState::PlayerTurn
 }
 
 pub fn try_move_player(delta_x: i32, delta_y: i32, ecs: &mut World) {

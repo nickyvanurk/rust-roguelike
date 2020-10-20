@@ -1,4 +1,4 @@
-use super::{Map, Monster, Position, Viewshed, WantsToMelee};
+use super::{Map, Monster, Position, RunState, Viewshed, WantsToMelee};
 use rltk::{a_star_search, DistanceAlg, Point};
 use specs::prelude::*;
 
@@ -9,6 +9,7 @@ impl<'a> System<'a> for MonsterAiSystem {
         WriteExpect<'a, Map>,
         ReadExpect<'a, Point>,
         ReadExpect<'a, Entity>,
+        ReadExpect<'a, RunState>,
         Entities<'a>,
         WriteStorage<'a, Viewshed>,
         ReadStorage<'a, Monster>,
@@ -22,6 +23,7 @@ impl<'a> System<'a> for MonsterAiSystem {
             mut map,
             player_pos,
             player_entity,
+            run_state,
             entities,
             mut viewshed,
             monster,
@@ -29,6 +31,10 @@ impl<'a> System<'a> for MonsterAiSystem {
             mut wants_to_melee,
         ): Self::SystemData,
     ) {
+        if *run_state != RunState::MonsterTurn {
+            return;
+        }
+
         for (entity, mut viewshed, _, mut pos) in
             (&entities, &mut viewshed, &monster, &mut position).join()
         {
