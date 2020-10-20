@@ -11,11 +11,15 @@ pub use map::*;
 pub use player::*;
 pub use rect::*;
 
+mod damage_system;
 mod map_indexing_system;
+mod melee_combat_system;
 mod monster_ai_system;
 mod visibility_system;
 
+use damage_system::DamageSystem;
 use map_indexing_system::MapIndexingSystem;
+use melee_combat_system::MeleeCombatSystem;
 use monster_ai_system::MonsterAiSystem;
 use visibility_system::VisibilitySystem;
 
@@ -41,6 +45,12 @@ impl State {
         let mut map_index = MapIndexingSystem {};
         map_index.run_now(&self.ecs);
 
+        let mut melee_combat = MeleeCombatSystem {};
+        melee_combat.run_now(&self.ecs);
+
+        let mut damage = DamageSystem {};
+        damage.run_now(&self.ecs);
+
         self.ecs.maintain();
     }
 }
@@ -55,6 +65,8 @@ impl GameState for State {
         } else {
             self.runstate = player_input(self, ctx);
         }
+
+        damage_system::delete_the_dead(&mut self.ecs);
 
         draw_map(&self.ecs, ctx);
 
@@ -90,6 +102,9 @@ fn main() -> rltk::BError {
     gs.ecs.register::<Name>();
     gs.ecs.register::<BlocksTile>();
     gs.ecs.register::<CombatStats>();
+    gs.ecs.register::<WantsToMelee>();
+
+    gs.ecs.register::<SufferDamage>();
 
     let map = Map::new_map_rooms_and_corridors();
     let (player_x, player_y) = map.rooms[0].center();
