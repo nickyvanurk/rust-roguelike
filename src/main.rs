@@ -2,6 +2,7 @@ use rltk::{GameState, Point, Rltk, RGB};
 use specs::prelude::*;
 
 mod components;
+mod gui;
 mod map;
 mod player;
 mod rect;
@@ -105,6 +106,8 @@ impl GameState for State {
                 ctx.set(pos.x, pos.y, render.fg, render.bg, render.glyph);
             }
         }
+
+        gui::draw_ui(&self.ecs, ctx);
     }
 }
 
