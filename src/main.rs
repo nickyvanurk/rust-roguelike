@@ -2,6 +2,7 @@ use rltk::{GameState, Point, Rltk, RGB};
 use specs::prelude::*;
 
 mod components;
+mod game_log;
 mod gui;
 mod map;
 mod player;
@@ -203,6 +204,9 @@ fn main() -> rltk::BError {
     gs.ecs.insert(Point::new(player_x, player_y));
     gs.ecs.insert(player_entity);
     gs.ecs.insert(RunState::PreRun);
+    gs.ecs.insert(game_log::GameLog {
+        entries: vec!["Welcome to Rusty Roguelike".to_string()],
+    });
 
     rltk::main_loop(context, gs)
 }
