@@ -1,4 +1,4 @@
-use rltk::{GameState, Point, Rltk, RGB};
+use rltk::{GameState, Point, Rltk};
 use specs::prelude::*;
 
 mod components;
@@ -7,6 +7,7 @@ mod gui;
 mod map;
 mod player;
 mod rect;
+mod spawner;
 
 pub use components::*;
 pub use map::*;
@@ -133,72 +134,15 @@ fn main() -> rltk::BError {
     gs.ecs.register::<SufferDamage>();
 
     let map = Map::new_map_rooms_and_corridors();
+
     let (player_x, player_y) = map.rooms[0].center();
+    let player_entity = spawner::player(&mut gs.ecs, player_x, player_y);
 
-    let player_entity = gs
-        .ecs
-        .create_entity()
-        .with(Position {
-            x: player_x,
-            y: player_y,
-        })
-        .with(Renderable {
-            glyph: rltk::to_cp437('@'),
-            fg: RGB::named(rltk::YELLOW),
-            bg: RGB::named(rltk::BLACK),
-        })
-        .with(Player {})
-        .with(Viewshed {
-            visible_tiles: Vec::new(),
-            range: 8,
-            dirty: true,
-        })
-        .with(Name {
-            name: "Player".to_string(),
-        })
-        .with(CombatStats {
-            max_hp: 30,
-            hp: 30,
-            defense: 2,
-            power: 5,
-        })
-        .build();
+    gs.ecs.insert(rltk::RandomNumberGenerator::new());
 
-    let mut rng = rltk::RandomNumberGenerator::new();
-
-    for (idx, room) in map.rooms.iter().skip(1).enumerate() {
+    for room in map.rooms.iter().skip(1) {
         let (x, y) = room.center();
-
-        let (glyph, name) = match rng.roll_dice(1, 2) {
-            1 => (rltk::to_cp437('g'), "Goblin".to_string()),
-            _ => (rltk::to_cp437('o'), "Orc".to_string()),
-        };
-
-        gs.ecs
-            .create_entity()
-            .with(Position { x, y })
-            .with(Renderable {
-                glyph,
-                fg: RGB::named(rltk::RED),
-                bg: RGB::named(rltk::BLACK),
-            })
-            .with(Monster {})
-            .with(Viewshed {
-                visible_tiles: Vec::new(),
-                range: 8,
-                dirty: true,
-            })
-            .with(Name {
-                name: format!("{} #{}", &name, idx),
-            })
-            .with(BlocksTile {})
-            .with(CombatStats {
-                max_hp: 16,
-                hp: 16,
-                defense: 1,
-                power: 4,
-            })
-            .build();
+        spawner::random_monster(&mut gs.ecs, x, y);
     }
 
     gs.ecs.insert(map);
