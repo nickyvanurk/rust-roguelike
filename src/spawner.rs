@@ -1,4 +1,7 @@
-use super::{BlocksTile, CombatStats, Monster, Name, Player, Position, Renderable, Viewshed};
+use super::{
+    map::MAP_WIDTH, BlocksTile, CombatStats, Monster, Name, Player, Position, Rect, Renderable,
+    Viewshed,
+};
 use rltk::{RandomNumberGenerator, RGB};
 use specs::prelude::*;
 
@@ -26,6 +29,37 @@ pub fn player(ecs: &mut World, x: i32, y: i32) -> Entity {
             power: 5,
         })
         .build()
+}
+
+const MAX_MONSTERS: i32 = 4;
+const MAX_ITEMS: i32 = 2;
+
+pub fn spawn_room(ecs: &mut World, room: &Rect) {
+    let mut monster_spawn_points: Vec<usize> = Vec::new();
+    {
+        let mut rng = ecs.write_resource::<RandomNumberGenerator>();
+        let num_monsters = rng.roll_dice(1, MAX_MONSTERS + 1) - 1;
+
+        for _ in 0..num_monsters {
+            let mut added = false;
+            while !added {
+                let x = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
+                let y = (room.y1 + rng.roll_dice(1, i32::abs(room.y2 - room.y1))) as usize;
+                let idx = (y * MAP_WIDTH) + x;
+
+                if !monster_spawn_points.contains(&idx) {
+                    monster_spawn_points.push(idx);
+                    added = true;
+                }
+            }
+        }
+    }
+
+    for &idx in monster_spawn_points.iter() {
+        let x = (idx % MAP_WIDTH) as i32;
+        let y = (idx / MAP_WIDTH) as i32;
+        random_monster(ecs, x, y)
+    }
 }
 
 pub fn random_monster(ecs: &mut World, x: i32, y: i32) {
