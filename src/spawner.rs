@@ -1,6 +1,6 @@
 use super::{
-    map::MAP_WIDTH, BlocksTile, CombatStats, Monster, Name, Player, Position, Rect, Renderable,
-    Viewshed,
+    map::MAP_WIDTH, BlocksTile, CombatStats, Item, Monster, Name, Player, Position, Potion, Rect,
+    Renderable, Viewshed,
 };
 use rltk::{RandomNumberGenerator, RGB};
 use specs::prelude::*;
@@ -36,9 +36,11 @@ const MAX_ITEMS: i32 = 2;
 
 pub fn spawn_room(ecs: &mut World, room: &Rect) {
     let mut monster_spawn_points: Vec<usize> = Vec::new();
+    let mut item_spawn_points: Vec<usize> = Vec::new();
     {
         let mut rng = ecs.write_resource::<RandomNumberGenerator>();
         let num_monsters = rng.roll_dice(1, MAX_MONSTERS + 1) - 1;
+        let num_items = rng.roll_dice(1, MAX_ITEMS + 1) - 1;
 
         for _ in 0..num_monsters {
             let mut added = false;
@@ -53,12 +55,32 @@ pub fn spawn_room(ecs: &mut World, room: &Rect) {
                 }
             }
         }
+
+        for _ in 0..num_items {
+            let mut added = false;
+            while !added {
+                let x = (room.x1 + rng.roll_dice(1, i32::abs(room.x2 - room.x1))) as usize;
+                let y = (room.y1 + rng.roll_dice(1, i32::abs(room.y2 - room.y1))) as usize;
+                let idx = (y * MAP_WIDTH) + x;
+
+                if !item_spawn_points.contains(&idx) && !monster_spawn_points.contains(&idx) {
+                    item_spawn_points.push(idx);
+                    added = true;
+                }
+            }
+        }
     }
 
     for &idx in monster_spawn_points.iter() {
         let x = (idx % MAP_WIDTH) as i32;
         let y = (idx / MAP_WIDTH) as i32;
-        random_monster(ecs, x, y)
+        random_monster(ecs, x, y);
+    }
+
+    for &idx in item_spawn_points.iter() {
+        let x = (idx % MAP_WIDTH) as i32;
+        let y = (idx / MAP_WIDTH) as i32;
+        health_potion(ecs, x, y);
     }
 }
 
@@ -107,5 +129,21 @@ pub fn monster<S: ToString>(ecs: &mut World, x: i32, y: i32, glyph: rltk::FontCh
             defense: 1,
             power: 4,
         })
+        .build();
+}
+
+fn health_potion(ecs: &mut World, x: i32, y: i32) {
+    ecs.create_entity()
+        .with(Position { x, y })
+        .with(Renderable {
+            glyph: rltk::to_cp437('¡'),
+            fg: RGB::named(rltk::MAGENTA),
+            bg: RGB::named(rltk::BLACK),
+        })
+        .with(Name {
+            name: "Health Potion".to_string(),
+        })
+        .with(Item {})
+        .with(Potion { heal_amount: 8 })
         .build();
 }
