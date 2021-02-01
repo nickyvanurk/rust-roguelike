@@ -15,12 +15,14 @@ pub use player::*;
 pub use rect::*;
 
 mod damage_system;
+mod inventory_system;
 mod map_indexing_system;
 mod melee_combat_system;
 mod monster_ai_system;
 mod visibility_system;
 
 use damage_system::DamageSystem;
+use inventory_system::ItemCollectionSystem;
 use map_indexing_system::MapIndexingSystem;
 use melee_combat_system::MeleeCombatSystem;
 use monster_ai_system::MonsterAiSystem;
@@ -54,6 +56,9 @@ impl State {
 
         let mut damage = DamageSystem {};
         damage.run_now(&self.ecs);
+
+        let mut pickup = ItemCollectionSystem {};
+        pickup.run_now(&self.ecs);
 
         self.ecs.maintain();
     }
@@ -133,6 +138,8 @@ fn main() -> rltk::BError {
     gs.ecs.register::<SufferDamage>();
     gs.ecs.register::<Item>();
     gs.ecs.register::<Potion>();
+    gs.ecs.register::<InBackpack>();
+    gs.ecs.register::<WantsToPickupItem>();
 
     let map = Map::new_map_rooms_and_corridors();
 
