@@ -23,6 +23,7 @@ mod visibility_system;
 
 use damage_system::DamageSystem;
 use inventory_system::ItemCollectionSystem;
+use inventory_system::ItemDropSystem;
 use inventory_system::PotionUseSystem;
 use map_indexing_system::MapIndexingSystem;
 use melee_combat_system::MeleeCombatSystem;
@@ -36,6 +37,7 @@ pub enum RunState {
     PlayerTurn,
     MonsterTurn,
     ShowInventory,
+    ShowDropItem,
 }
 
 pub struct State {
@@ -64,6 +66,9 @@ impl State {
 
         let mut potions = PotionUseSystem {};
         potions.run_now(&self.ecs);
+
+        let mut drop_items = ItemDropSystem {};
+        drop_items.run_now(&self.ecs);
 
         self.ecs.maintain();
     }
@@ -113,6 +118,24 @@ impl GameState for State {
                                 WantsToDrinkPotion {
                                     potion: item_entity,
                                 },
+                            )
+                            .expect("Unable to insert intent");
+                        new_run_state = RunState::PlayerTurn;
+                    }
+                }
+            }
+            RunState::ShowDropItem => {
+                let (result, item) = gui::drop_item_menu(self, ctx);
+                match result {
+                    gui::ItemMenuResult::Cancel => new_run_state = RunState::AwaitingInput,
+                    gui::ItemMenuResult::NoResponse => {}
+                    gui::ItemMenuResult::Selected => {
+                        let item_entity = item.unwrap();
+                        let mut intent = self.ecs.write_storage::<WantsToDropItem>();
+                        intent
+                            .insert(
+                                *self.ecs.fetch::<Entity>(),
+                                WantsToDropItem { item: item_entity },
                             )
                             .expect("Unable to insert intent");
                         new_run_state = RunState::PlayerTurn;
@@ -169,6 +192,7 @@ fn main() -> rltk::BError {
     gs.ecs.register::<InBackpack>();
     gs.ecs.register::<WantsToPickupItem>();
     gs.ecs.register::<WantsToDrinkPotion>();
+    gs.ecs.register::<WantsToDropItem>();
 
     let map = Map::new_map_rooms_and_corridors();
 
